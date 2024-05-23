@@ -1,7 +1,7 @@
 # Prerequisite
 
 - [Create a telegram bot](https://core.telegram.org/bots/tutorial#getting-ready)
-- [Set webhook for this bot](https://core.telegram.org/bots/api#setwebhook)  eg: https://api.telegram.org/[token]/setWebhook?url=https://xxx.ngrok-free.app
+- [Set webhook for this bot](https://core.telegram.org/bots/api#setwebhook)  eg:  ``` GET https://api.telegram.org/[token]/setWebhook?url=https://xxx.ngrok-free.app```
 - Having ```.env``` filled
 
 # How to Run
