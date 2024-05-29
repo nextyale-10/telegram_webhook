@@ -1,0 +1,4 @@
+bot:
+  name: bot1
+  script: ./template/message1Bot.json
+  

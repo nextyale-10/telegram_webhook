@@ -1,0 +1,5 @@
+# global config
+
+cur_bot: bot1
+bots: [bot1,bot2]
+host: bot1
