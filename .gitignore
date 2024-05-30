@@ -1,3 +1,10 @@
 **/.env
 **/.DS_Store
 **/__pycache__/**
+**/*.log
+
+
+
+# specific files
+a.txt
+config_test.py

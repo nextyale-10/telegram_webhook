@@ -1,5 +1,17 @@
 # global config
 
-cur_bot: bot1
-bots: [bot1,bot2]
-host: bot1
+cur_bot: bot0
+bots: 
+  bot0: 
+    name: bot0
+  bot1: 
+    name: bot1
+
+host: bot0
+
+uvicorn:
+  host: 0.0.0.0
+  port: 8000
+
+script_path: ./template/message1Bot.json
+agents-num: 2 # number of agents includeing host

@@ -10,6 +10,7 @@ from do.model import User
 import datetime
 from apis import telegram_api
 from dotenv import load_dotenv
+from util.customized_ds import DotDict
 import os
 
 load_dotenv()
@@ -19,9 +20,12 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 GREETING_MSG="Long time no see! How are you doing?"
 
+
 def logging_config():
     logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(funcName)s -%(message)s',
+                        filename='app.log',
+                        filemode='a')
 
 def get_db():
     db = SessionLocal()
@@ -68,3 +72,13 @@ def set_recurring_greeting_timer(interval:int, # interval for searching db
 def setup():
     logging_config()
     set_recurring_greeting_timer(interval=5,timedelta=datetime.timedelta(seconds=60*60))
+    
+def read_config():
+    import yaml
+    with open('config.yaml', 'r') as f:
+        data = yaml.load(f, Loader=yaml.SafeLoader)
+    return data
+
+config = DotDict(read_config())
+sessions = DotDict(dict())
+total = DotDict({"config":config,"sessions":sessions})

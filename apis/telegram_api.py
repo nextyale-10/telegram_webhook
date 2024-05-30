@@ -4,7 +4,7 @@ import os
 
 load_dotenv()
 TELEGRAM_API_TOKENS = os.getenv("TELEGRAM_API_TOKENS").split(",")
-bots = [Bot(token=TELEGRAM_API_TOKENS[0])]
+bots = [Bot(token=token) for token in TELEGRAM_API_TOKENS]
 
-async def sendMessage(chat_id: int, text: str):
-    await bots[0].sendMessage(chat_id=chat_id, text=text)
+async def sendMessage(chat_id: int, text: str, bot_id: int = 0):
+    await bots[bot_id].sendMessage(chat_id=chat_id, text=text)
