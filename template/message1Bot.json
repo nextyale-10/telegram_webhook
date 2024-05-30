@@ -1,0 +1,90 @@
+{
+    "steps":[
+        {
+            "step":0,
+            "messages":[
+                {
+                    "id":0,
+                    "content":"Hello and a very warm welcome to everyone joining us today! I'll be your host for this discussion. My name is {config.bots.bot0.name}",
+                    "action": "continue", 
+                    "sender": 0
+                },
+                {
+                    "id":1,
+                    "content":"How may we address you? Please just input your name.",
+                    "action": "forward",
+                    "sender": 0,
+                    "forward": {
+                        "prompt": "please extract the name of the user from the following sentence. Return only the name without anything else.\n{input}",
+                        "key": "username"
+                    }
+                }
+            ]
+
+        },
+        {
+            "step":1,
+            "messages":[
+                {
+                    "id":0,
+                    "content":"Hello {username}! It's a pleasure to have you with us today. I hope you're doing well.",
+                    "action": "continue",
+                    "sender": 0
+                },
+                {
+                    "id": 1,
+                    "content": "Our system is still in test stage. So there is no specific goal. However, please allow our chatbot, {config.bots.bot1.name}, to introduce itself.",
+                    "action": "continue",
+                    "sender": 0
+                },
+                {
+                    "id": 2,
+                    "content": "Hello, nice to meet you! My name is {config.bots.bot1.name}. I am a chatbot designed to do persuasive conversation. I am still in test stage, so please bear with me.",
+                    "action": "continue",
+                    "sender": 1
+                }
+            ]
+        },
+        {
+            "step":2,
+            "messages":[
+                {
+                    "id": 0,
+                    "content": "Let's do some simple task for test purpose. ",
+                    "action": "continue",
+                    "sender": 1
+                },
+                {
+                    "id": 1,
+                    "content": "I will summarize what you say. Please say something and I will summarize it.",
+                    "action": "forward",
+                    "forward":{
+                        "prompt": "Please summarize the following sentence: \n{input}",  
+                        "key": "lastReply"
+                    },
+                    "sender": 1
+                },
+                {
+                    "id": 2,
+                    "content": "What you just said can be summarized as following: {lastReply}",
+                    "action":"continue",
+                    "sender": 1
+                }
+            ]
+        },
+        {
+            "step": 3,
+            "messages":[
+                {
+                    "id":0,
+                    "content": "Thanks for your participation. Let's end the conversation. Now you can free chat with host as a normal chatbot.",
+                    "action": "end",
+                    "sender": 0
+                }
+            ]
+        }
+
+        
+
+    ]
+}
