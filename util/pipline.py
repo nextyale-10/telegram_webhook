@@ -71,6 +71,7 @@ class Pipline:
         except Exception as e:
             logging.error(f"error in pipline run: {e}")
             logging.error(f"stepId: {self.stepId}, messageId: {self.messageId}")
+            raise e
             
             
             
