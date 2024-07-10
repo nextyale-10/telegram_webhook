@@ -24,6 +24,12 @@ async def telegram_webhook(update: Union[dict,None],db:Session = Depends(get_db)
         chat_id = chat["id"]
         if not chat_id in sessions:
             sessions[chat_id] = {"freeTalk":True,"messageIds":set()}
+            
+            # setting up chat history with chatgpt if it is the first time.
+            freetalkConfig = config.openai.chatgpt.mode.free_talk.starting_msg
+            starting_message = {"role":freetalkConfig.role,"content":freetalkConfig.content}
+            sessions[chat_id]["freeTalkHistory"] = [starting_message]
+            
         if message["message_id"] in sessions[chat_id]["messageIds"]:
             # idempotent
             return

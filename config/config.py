@@ -37,33 +37,25 @@ def get_db():
 def set_recurring_greeting_timer(interval:int, # interval for searching db
                                  timedelta: datetime.timedelta):
     
-    async def greeting(chat_id:int):
-        await telegram_api.sendMessage(chat_id,GREETING_MSG)
+    async def greeting(chat_id:int,user:User,db):
+        await telegram_api.sendMessage(chat_id,GREETING_MSG,bot_id=0,parse_mode=None)
+        update_user_activity_time(user.telegram_id,db)
         ...
-    def run(timedelta: datetime.timedelta):
-        # print("Running")
-        db = SessionLocal()
-        
-        users = db.query(User).filter(User.last_active<(datetime.datetime.now()-timedelta)).all()
+    async def process_users():
+        with SessionLocal() as db:
+            users = db.query(User).filter(User.last_active<(datetime.datetime.now()-timedelta)).all()
 
-        count = 0 # limit the number of messages sent in a second
-        for user in users:
-            
-            #todo need to write better code for this
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(greeting(user.telegram_id))
-            
-            # asyncio.run(greeting(user.telegram_id)) 
-            update_user_activity_time(user.telegram_id,db)
-            if count>25:
-                count = 0
-                time.sleep(1)
-                
-            count+=1
-            
+            tasks = [greeting(user.telegram_id,user,db) for user in users]
+            if tasks:
+                await asyncio.gather(*tasks)
+
+    def run(timedelta: datetime.timedelta):
+
+        
+        asyncio.run(process_users())
+
+
         threading.Timer(interval, run,(timedelta,)).start()
-        db.close()
         
         
     threading.Timer(interval, run,(timedelta,)).start()
