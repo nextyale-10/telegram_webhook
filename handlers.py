@@ -22,7 +22,7 @@ async def messageHandler(message: dict,db:Session= Depends(get_db)):
     
     if sessions[chat_id]["freeTalk"]:
         text = message["text"]
-        response = get_response(text,chatId=chat_id,useHistory=True)
+        response = await get_response(text,chatId=chat_id,useHistory=True)
         # response = "this is a response"
         await sendMessage(chat_id, response)
     else:

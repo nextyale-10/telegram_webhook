@@ -57,7 +57,7 @@ def set_recurring_greeting_timer(interval:int, # interval for searching db
 
         threading.Timer(interval, run,(timedelta,)).start()
         
-        
+    #? consider change threading to async task or at least another process for efficiency or multi-core ultilization
     threading.Timer(interval, run,(timedelta,)).start()
 
     ...

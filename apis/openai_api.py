@@ -1,5 +1,5 @@
 
-from openai import OpenAI
+from openai import OpenAI,AsyncOpenAI
 from dotenv import load_dotenv
 import os
 from config.config import sessions,config
@@ -8,9 +8,9 @@ import logging
 load_dotenv()
 
 API_KEY = os.getenv("OPENAI_KEY")
-client = OpenAI(api_key=API_KEY)
+client = AsyncOpenAI(api_key=API_KEY)
 
-def get_response(query: str,chatId=None,useHistory=False):
+async def get_response(query: str,chatId=None,useHistory=False):
     history  = sessions[chatId]["freeTalkHistory"]
     currentRound = {"role":"user","content":f"{query}"}
     history.append(currentRound)
@@ -20,7 +20,7 @@ def get_response(query: str,chatId=None,useHistory=False):
         history =[{"role":defaultConfig.role,"content":defaultConfig.content},
                     currentRound]
     
-    response = client.chat.completions.create(
+    response = await client.chat.completions.create(
             model="gpt-4o",
             messages=history
         )

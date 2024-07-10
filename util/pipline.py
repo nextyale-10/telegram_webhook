@@ -50,7 +50,7 @@ class Pipline:
                         if self.waitingInput:
                             return
                         prompt = messages[j].forward.prompt
-                        resp = openai_api.get_response(prompt.format(**sessions[self.chatId]),chatId = self.chatId)
+                        resp = await openai_api.get_response(prompt.format(**sessions[self.chatId]),chatId = self.chatId)
                         sessions[self.chatId][messages[j].forward.key] = resp
                         self.forwarded = True
                         self.messageId = j+1
