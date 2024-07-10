@@ -12,6 +12,18 @@ host: bot0
 uvicorn:
   host: 0.0.0.0
   port: 8000
+openai:
+  chatgpt:
+    mode:
+      free_talk: 
+        starting_msg: 
+          role: "system"
+          content: "You are a helpful assistant."
+      pipline: "placeholder"
+      default: 
+        starting_msg: 
+          role: "system"
+          content: "You are a helpful assistant."
 
 script_path: ./template/message1Bot.json
 agents-num: 2 # number of agents includeing host
