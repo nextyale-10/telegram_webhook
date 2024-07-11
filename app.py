@@ -7,7 +7,8 @@ from config.config import config,setup,get_db,sessions
 from telegram import Update
 from typing import Union
 from handlers import *
-
+from util import messageq
+import asyncio
 app = FastAPI()
 
 setup()
@@ -30,8 +31,9 @@ async def telegram_webhook(update: Union[dict,None],db:Session = Depends(get_db)
             starting_message = {"role":freetalkConfig.role,"content":freetalkConfig.content}
             sessions[chat_id]["freeTalkHistory"] = [starting_message]
             
-        if message["message_id"] in sessions[chat_id]["messageIds"]:
+        if message["message_id"] in sessions[chat_id]["messageIds"]: #and False:
             # idempotent
+            logging.info(f"this message has been processed before")
             return
         else:
             sessions[chat_id]["messageIds"].add(message["message_id"])
@@ -55,6 +57,11 @@ async def telegram_webhook(update: Union[dict,None],db:Session = Depends(get_db)
         else:
             await messageHandler(update["message"],db)
     ...
+@app.on_event("startup")
+async def startup_event():
+    
+    logging.info("app started")
+    asyncio.create_task(messageq.messageSender())
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=config.uvicorn.host, port=config.uvicorn.port)

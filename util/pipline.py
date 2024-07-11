@@ -1,7 +1,8 @@
 from util.customized_ds import DotDict
 from config.config import config,sessions,logging
 import json
-from apis import telegram_api,openai_api
+from apis import openai_api
+from util.messageq import queueMessage
 import time
 class Pipline:
     def __init__(self,chatId):
@@ -26,11 +27,11 @@ class Pipline:
                 for j in range(self.messageId,len(messages)):
                     if self.forwarded:
                         # if last message is forwarded, then there are something stored in sessions
-                        await telegram_api.sendMessage(self.chatId,step.messages[j].content.format(**sessions[self.chatId]),bot_id=messages[j].sender)
+                        await queueMessage(self.chatId,step.messages[j].content.format(**sessions[self.chatId]),bot_id=messages[j].sender)
                         self.forwarded = False
                     else:
                         if not self.waitingInput:
-                            await telegram_api.sendMessage(self.chatId,step.messages[j].content.format(**DotDict({"config":config})),bot_id=messages[j].sender)
+                            await queueMessage(self.chatId,step.messages[j].content.format(**DotDict({"config":config})),bot_id=messages[j].sender)
                     if messages[j].action=="forward":
                         self.waitingInput = True
                     if received:
