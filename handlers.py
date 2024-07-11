@@ -72,6 +72,13 @@ async def commandHandler(message: dict,db:Session= Depends(get_db)):
             return
         ...
     
+    elif cmd=="clean":
+        # clean the chat history
+        freetalkConfig = config.openai.chatgpt.mode.free_talk.starting_msg
+        starting_message = {"role":freetalkConfig.role,"content":freetalkConfig.content}
+        sessions[chat_id]["freeTalkHistory"] = [starting_message]
+        await sendMessage(chat_id,"Chat history cleaned.")
+        ...
     ...
 def _parseCommand(cmd: str):
     return cmd[1:].split("@")[0]
