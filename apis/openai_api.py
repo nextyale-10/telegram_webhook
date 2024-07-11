@@ -5,7 +5,7 @@ import os
 from config.config import sessions,config
 import logging
 
-load_dotenv()
+load_dotenv(override=True)
 
 API_KEY = os.getenv("OPENAI_KEY")
 client = AsyncOpenAI(api_key=API_KEY)

@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 import logging
 
-load_dotenv()
+load_dotenv(override=True)
 TELEGRAM_API_TOKENS = os.getenv("TELEGRAM_API_TOKENS").split(",")
 bots = [Bot(token=token) for token in TELEGRAM_API_TOKENS]
 

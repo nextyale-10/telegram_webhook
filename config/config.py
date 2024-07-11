@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from util.customized_ds import DotDict
 import os
 
-load_dotenv()
+load_dotenv(override=True)
 
 SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
