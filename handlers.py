@@ -33,15 +33,8 @@ async def messageHandler(message: dict,db:Session= Depends(get_db)):
         if not ppl:
             logging.error(f"no pipline in session")
             return
-        if ppl.end:
-            sessions[chat_id]["freeTalk"] = True
-            return
-        if ppl.waitingInput:
-            sessions[chat_id]["input"]=message["text"]
-            await ppl.run(received=True)
-        else:
-            # possibly ignore?
-            await ppl.run()
+        sessions[chat_id]["piplineKV"]["lastUserMessage"] = message["text"]
+        await ppl.run()
         ...
         
         
