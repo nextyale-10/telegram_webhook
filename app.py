@@ -8,6 +8,7 @@ from telegram import Update
 from typing import Union
 from handlers import *
 from util import messageq
+from util.customized_ds import DotDict
 import asyncio
 app = FastAPI()
 
@@ -24,7 +25,14 @@ async def telegram_webhook(update: Union[dict,None],db:Session = Depends(get_db)
         chat = message["chat"]
         chat_id = chat["id"]
         if not chat_id in sessions:
-            sessions[chat_id] = {"freeTalk":True,"messageIds":set()}
+            """
+            Initialize the session for this user (identified by chat_id)
+            Initially the session includes:
+            - freeTalk: True (originally in free talk mode)
+            - messageIds: set() (to store the message ids that have been processed)
+            - memory: [] (to store the memory of the conversation)
+            """
+            sessions[chat_id] = {"freeTalk":True,"messageIds":set(),"memory":[]}
             
             # setting up chat history with chatgpt if it is the first time.
             freetalkConfig = config.openai.chatgpt.mode.free_talk.starting_msg
