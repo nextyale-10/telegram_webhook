@@ -5,7 +5,7 @@
             "messages":[
                 {
                     "id":0,
-                    "preActions":[{}],
+                    "preActions":[],
                     "content":"Hello and a very warm welcome to everyone joining us today! I'll be your host for this discussion. My name is {config.bots.bot0.name}",
                     "postActions":[ {
                         "type": "continue"
@@ -14,7 +14,7 @@
                 },
                 {
                     "id":1,
-                    "preActions":[{}],
+                    "preActions":[],
                     "content":"How may we address you? Please just input your name.",
                     "sender": 0,
                     "postActions":[
