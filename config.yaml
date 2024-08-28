@@ -3,18 +3,23 @@
 cur_bot: bot0
 bots: 
   bot0: 
+    index: 0
     username: OkBotBotBotBotBot
     name: bot0
-    description: "a bot can provide user with some useful suggestion about your living environment to improve your sleep."
+    description: "a bot can provide users with some useful suggestion about their living environment to improve their sleep."
+    system_prompt: "Now you are a bot that can provide user with some useful suggestion about their living environment to improve their sleep."
   bot1: 
+    index: 1
     username: No2hcibot
     name: bot1
-    description: "a bot can provide user with some useful suggestion about your physical state(health, diet, and exercise)"
+    description: "a bot can provide user with some useful suggestion about their physical state(health, diet, and exercise)"
+    system_prompt: "Now you are a bot that can provide user with some useful suggestion about their physical state(health, diet, and exercise)"
   bot2:
+    index: 2
     username: No3HciBot
     name: bot2
-    description: "a bot can provide user with some useful suggestion about your mental state(mood, stress...)"
-
+    description: "a bot can provide user with some useful suggestion about their mental state(mood, stress...)"
+    system_prompt: "Now you are a bot that can provide user with some useful suggestion about their mental state(mood, stress...)"
 host: bot0
 
 uvicorn:
@@ -26,12 +31,12 @@ openai:
       free_talk: 
         starting_msg: 
           role: "system"
-          content: "You are a helpful assistant."
+          content: "You are a Sleep expert ."
       pipline: "placeholder"
       default: 
         starting_msg: 
           role: "system"
-          content: "You are a helpful assistant."
+          content: "You are a Sleep expert ."
 
 script_paths:
   introduction: ./template/introduction3Bot.json

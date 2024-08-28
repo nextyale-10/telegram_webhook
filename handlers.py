@@ -12,6 +12,8 @@ from datetime import datetime
 import re
 number = 0
 
+MEMORY_STORE_FREQUENCY = 5
+
 MEMORY_PROMPT = """
 Based on the provided chat history in JSON format and the current time: {time}, please follow the steps below:
 
@@ -38,17 +40,50 @@ async def messageHandler(message: dict,db:Session= Depends(get_db)):
         logging.error(f"no text field in message, something wrong")
         return
     
-    chat_id = message["chat"]["id"]
-    
-    if sessions[chat_id]["freeTalk"]:
+    chatId = message["chat"]["id"]
+
+    if sessions[chatId]["freeTalk"]:
         text = message["text"]
-        response = await get_response(text,chatId=chat_id,useHistory=True)
         # response = f"{number}. this is a test response not costing money"
-        userMessageCount = _countUserMessage(sessions[chat_id]["freeTalkHistory"])
-        if userMessageCount!=0 and userMessageCount%2==0:
+        
+        bots = [config.bots[botId] for botId in config.bots]
+        mentionedBots = [bot for bot in bots if f"@{bot.username}" in text]
+        if mentionedBots:
+            """
+            If user explicitly mentions a bot, then only the bot should respond to the user's query.
+            
+            """
+            bots = mentionedBots
+            
+        for bot in bots:
+            content = \
+            f"""
+            Current time : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            Please answer user's query based on the memory provided and your profession.
+            
+            Memory: {sessions[chatId]['memory']}
+            
+            Your profession: {bot.system_prompt}
+            
+            Rules: 
+            1.You need to try your best to adhere your profession.
+            2.You need to answer the user's query based on the memory provided if possible.
+            """
+            systemPrompt = {"role":"system","content":content}
+            response = await get_response(text,chatId=chatId,useHistory=True,systemMessage=systemPrompt)
+            await queueMessage(chatId, response,bot_id=bot.index)
+            history = sessions[chatId]["freeTalkHistory"]
+            history.append({"role":"assistant","content":f"[{bot.name}'s response]: {response}"})
+
+            
+        '''
+        Store memory every MEMORY_STORE_FREQUENCY
+        '''
+        userMessageCount = _countUserMessage(sessions[chatId]["freeTalkHistory"])
+        if userMessageCount!=0 and userMessageCount%MEMORY_STORE_FREQUENCY==0:
             try:
                 time =datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                retMem = await get_response(MEMORY_PROMPT.format(history=json.dumps(sessions[chat_id]["freeTalkHistory"]),time=time),chatId=chat_id,useHistory=False,useMemory=False)
+                retMem = await get_response(MEMORY_PROMPT.format(history=json.dumps(sessions[chatId]["freeTalkHistory"]),time=time),chatId=chatId,useHistory=False)
                 pattern =r'\[\s*(.*?)\s*\]'
                 match = re.search(pattern, retMem, re.DOTALL)
 
@@ -56,18 +91,17 @@ async def messageHandler(message: dict,db:Session= Depends(get_db)):
                     memory = match.group(0)
                 memory = json.loads(memory)
                 for m in memory:
-                    sessions[chat_id]["memory"].append(m)
+                    sessions[chatId]["memory"].append(m)
             except Exception as e:
                 logging.error(f"error in memory format: {retMem} with error {e}")
         number+=1
-        await queueMessage(chat_id, response)
     else:
         # in a pipline
-        ppl = sessions[chat_id]["pipline"]
+        ppl = sessions[chatId]["pipline"]
         if not ppl:
             logging.error(f"no pipline in session")
             return
-        sessions[chat_id]["piplineKV"]["lastUserMessage"] = message["text"]
+        sessions[chatId]["piplineKV"]["lastUserMessage"] = message["text"]
         await ppl.run()
         ...
         
@@ -88,16 +122,16 @@ async def commandHandler(message: dict,db:Session= Depends(get_db)):
     
     cmd = _parseCommand(message["text"])
     
-    chat_id = message["chat"]["id"]
+    chatId = message["chat"]["id"]
     
     if cmd=="start":
         # start the conversation
-        sessions[chat_id]["freeTalk"] = False
-        ppl =Pipline(chat_id,config.script_paths.before_bedtime)
-        sessions[chat_id]["pipline"]=ppl
+        sessions[chatId]["freeTalk"] = False
+        ppl =Pipline(chatId,config.script_paths.before_bedtime)
+        sessions[chatId]["pipline"]=ppl
         await ppl.run()
         if ppl.end:
-            sessions[chat_id]["freeTalk"] = True
+            sessions[chatId]["freeTalk"] = True
             return
         ...
     
@@ -105,23 +139,23 @@ async def commandHandler(message: dict,db:Session= Depends(get_db)):
         # clean the chat history
         freetalkConfig = config.openai.chatgpt.mode.free_talk.starting_msg
         starting_message = {"role":freetalkConfig.role,"content":freetalkConfig.content}
-        sessions[chat_id]["freeTalkHistory"] = [starting_message]
-        await queueMessage(chat_id,"Chat history cleaned.")
+        sessions[chatId]["freeTalkHistory"] = [starting_message]
+        await queueMessage(chatId,"Chat history cleaned.")
         ...
     elif cmd=="memory":
         retval = "meomry:\n"
         
-        for i,m in enumerate(sessions[chat_id]["memory"]):
+        for i,m in enumerate(sessions[chatId]["memory"]):
             retval+=f"{i}: {m}\n"
-        await queueMessage(chat_id,retval)
+        await queueMessage(chatId,retval)
     elif cmd=="intro":
         # start an introduction session
-        sessions[chat_id]["freeTalk"] = False
-        ppl =Pipline(chat_id,config.script_paths.introduction)
-        sessions[chat_id]["pipline"]=ppl
+        sessions[chatId]["freeTalk"] = False
+        ppl =Pipline(chatId,config.script_paths.introduction)
+        sessions[chatId]["pipline"]=ppl
         await ppl.run()
         if ppl.end:
-            sessions[chat_id]["freeTalk"] = True
+            sessions[chatId]["freeTalk"] = True
             return
     ...
 def _parseCommand(cmd: str):
