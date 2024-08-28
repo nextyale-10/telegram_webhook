@@ -12,6 +12,8 @@ from datetime import datetime
 import re
 number = 0
 
+MEMORY_STORE_FREQUENCY = 2
+
 MEMORY_PROMPT = """
 Based on the provided chat history in JSON format and the current time: {time}, please follow the steps below:
 
@@ -21,6 +23,8 @@ Based on the provided chat history in JSON format and the current time: {time}, 
     - Include time information when relevant. Convert all relative time expressions (e.g., currently={time}, today={time}, tomorrow={time}+1day, yesterday={time}-1day) into exact times or dates relative to the provided current time {time}.
     - Avoid any redundant or irrelevant details.
     - Be listed as separate memory items within a single list.
+    - Do not record memory about assistant's responses or any unnecessary information.
+    - Only record memory that is about user.
 Chat history: {history}
 Return the memory in the following format:
 
@@ -38,17 +42,53 @@ async def messageHandler(message: dict,db:Session= Depends(get_db)):
         logging.error(f"no text field in message, something wrong")
         return
     
-    chat_id = message["chat"]["id"]
-    
-    if sessions[chat_id]["freeTalk"]:
+    chatId = message["chat"]["id"]
+
+    if sessions[chatId]["freeTalk"]:
         text = message["text"]
-        response = await get_response(text,chatId=chat_id,useHistory=True)
         # response = f"{number}. this is a test response not costing money"
-        userMessageCount = _countUserMessage(sessions[chat_id]["freeTalkHistory"])
-        if userMessageCount!=0 and userMessageCount%2==0:
+        
+        bots = [config.bots[botId] for botId in config.bots]
+        mentionedBots = [bot for bot in bots if f"@{bot.username}" in text]
+        if mentionedBots:
+            """
+            If user explicitly mentions a bot, then only the bot should respond to the user's query.
+            
+            """
+            bots = mentionedBots
+            
+        for bot in bots:
+            content = \
+            f"""
+            Current time : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            Please response to user's query based on the memory provided and your profession.
+            
+            Memory: {sessions[chatId]['memory']}
+            
+            Your profession: {bot.system_prompt}
+            
+            Rules: 
+            1.You need to try your best to adhere your profession.
+            2.You need to answer the user's query based on the memory provided if possible.
+            3.Keep your response short, as it is just a casual conversation.
+            4.It is a casual conversation.So suggestion is not mandatory.
+            5.[Very Important] Do not repeat the content or points said by previous assistants.
+            """
+            systemPrompt = {"role":"system","content":content}
+            response = await get_response(text,chatId=chatId,useHistory=True,temperature=1,systemMessage=systemPrompt)
+            await queueMessage(chatId, response,bot_id=bot.index)
+            history = sessions[chatId]["freeTalkHistory"]
+            history.append({"role":"assistant","content":f"[{bot.name}'s response]: {response}"})
+
+            
+        '''
+        Store memory every MEMORY_STORE_FREQUENCY
+        '''
+        userMessageCount = _countUserMessage(sessions[chatId]["freeTalkHistory"])
+        if userMessageCount!=0 and userMessageCount%MEMORY_STORE_FREQUENCY==0:
             try:
                 time =datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                retMem = await get_response(MEMORY_PROMPT.format(history=json.dumps(sessions[chat_id]["freeTalkHistory"]),time=time),chatId=chat_id,useHistory=False,useMemory=False)
+                retMem = await get_response(MEMORY_PROMPT.format(history=json.dumps(sessions[chatId]["freeTalkHistory"]),time=time),chatId=chatId,useHistory=False)
                 pattern =r'\[\s*(.*?)\s*\]'
                 match = re.search(pattern, retMem, re.DOTALL)
 
@@ -56,18 +96,17 @@ async def messageHandler(message: dict,db:Session= Depends(get_db)):
                     memory = match.group(0)
                 memory = json.loads(memory)
                 for m in memory:
-                    sessions[chat_id]["memory"].append(m)
+                    sessions[chatId]["memory"].append(m)
             except Exception as e:
-                logging.error(f"error in memory format: {retMem} with error {e}")
+                logging.error(f"error in memory format: {retMem if retMem else 'None'} with error {e}")
         number+=1
-        await queueMessage(chat_id, response)
     else:
         # in a pipline
-        ppl = sessions[chat_id]["pipline"]
+        ppl = sessions[chatId]["pipline"]
         if not ppl:
             logging.error(f"no pipline in session")
             return
-        sessions[chat_id]["piplineKV"]["lastUserMessage"] = message["text"]
+        sessions[chatId]["piplineKV"]["lastUserMessage"] = message["text"]
         await ppl.run()
         ...
         
@@ -88,16 +127,16 @@ async def commandHandler(message: dict,db:Session= Depends(get_db)):
     
     cmd = _parseCommand(message["text"])
     
-    chat_id = message["chat"]["id"]
+    chatId = message["chat"]["id"]
     
     if cmd=="start":
         # start the conversation
-        sessions[chat_id]["freeTalk"] = False
-        ppl =Pipline(chat_id,config.script_paths.before_bedtime)
-        sessions[chat_id]["pipline"]=ppl
+        sessions[chatId]["freeTalk"] = False
+        ppl =Pipline(chatId,config.script_paths.before_bedtime)
+        sessions[chatId]["pipline"]=ppl
         await ppl.run()
         if ppl.end:
-            sessions[chat_id]["freeTalk"] = True
+            sessions[chatId]["freeTalk"] = True
             return
         ...
     
@@ -105,24 +144,46 @@ async def commandHandler(message: dict,db:Session= Depends(get_db)):
         # clean the chat history
         freetalkConfig = config.openai.chatgpt.mode.free_talk.starting_msg
         starting_message = {"role":freetalkConfig.role,"content":freetalkConfig.content}
-        sessions[chat_id]["freeTalkHistory"] = [starting_message]
-        await queueMessage(chat_id,"Chat history cleaned.")
+        sessions[chatId]["freeTalkHistory"] = [starting_message]
+        await queueMessage(chatId,"Chat history cleaned.")
         ...
     elif cmd=="memory":
         retval = "meomry:\n"
         
-        for i,m in enumerate(sessions[chat_id]["memory"]):
+        for i,m in enumerate(sessions[chatId]["memory"]):
             retval+=f"{i}: {m}\n"
-        await queueMessage(chat_id,retval)
+        await queueMessage(chatId,retval)
     elif cmd=="intro":
         # start an introduction session
-        sessions[chat_id]["freeTalk"] = False
-        ppl =Pipline(chat_id,config.script_paths.introduction)
-        sessions[chat_id]["pipline"]=ppl
+        sessions[chatId]["freeTalk"] = False
+        ppl =Pipline(chatId,config.script_paths.introduction)
+        sessions[chatId]["pipline"]=ppl
         await ppl.run()
         if ppl.end:
-            sessions[chat_id]["freeTalk"] = True
+            sessions[chatId]["freeTalk"] = True
             return
+    elif cmd=="suggestion":
+        bots = [config.bots[botId] for botId in config.bots]
+        for bot in bots:
+            content = \
+            f"""
+            Current time : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            Please direct answer user's query based on the memory provided and your profession.Do not include any indicators.            
+            Memory: {sessions[chatId]['memory']}
+            
+            Your profession: {bot.system_prompt}
+                 
+            Rules: 
+            1.You need to adhere your profession provided above.
+            2.[Important] You need to answer the user's query based on the memory provided if possible.
+            3.Do not repeat the content or points said by previous assistants.
+            4.If you dont have much to say, you can just say some wishes like "I currently do not have many suggestions, but I wish you a good night."
+            
+            """
+            text = "Please give me some suggestions before me going to bed. Please keep it short."
+            systemPrompt = {"role":"system","content":content}
+            response = await get_response(text,chatId=chatId,useHistory=True,systemMessage=systemPrompt,temperature=0.8)
+            await queueMessage(chatId, response,bot_id=bot.index)
     ...
 def _parseCommand(cmd: str):
     return cmd[1:].split("@")[0]

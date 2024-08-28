@@ -12,17 +12,14 @@ load_dotenv(override=True)
 API_KEY = os.getenv("OPENAI_KEY")
 client = AsyncOpenAI(api_key=API_KEY)
 
-async def get_response(query: str,chatId=None,useHistory=False,useMemory=True,role="user",temperature=0,systemMessage=""):
+async def get_response(query: str,chatId=None,useHistory=False,role="user",temperature=0,systemMessage=None):
     history  = sessions[chatId]["freeTalkHistory"]
-    if useMemory:
-        memoryPrompt = {"role":"system","content": f"Current Time:{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}Please answer user's query based on following memory or information: {sessions[chatId]['memory']}"}
-        history.append(memoryPrompt)
+    if systemMessage is not None:
+        history.append(systemMessage)
     currentRound = {"role":role,"content":f"{query}"}
-    if not useHistory:
-        defaultConfig = config.openai.chatgpt.mode.default.starting_msg
-        
-        tempHistory =[{"role":defaultConfig.role,"content":defaultConfig.content},
-                    currentRound]
+    if not useHistory:        
+        tempHistory =[systemMessage,
+                    currentRound] if systemMessage is not None else [currentRound]
     else:
         history.append(currentRound)
 
@@ -32,6 +29,14 @@ async def get_response(query: str,chatId=None,useHistory=False,useMemory=True,ro
             temperature=temperature
         )
     resp_text = response.choices[0].message.content
+    
+    if useHistory:
+        userQuery = history.pop()
+        
+        # pop system message to avoid side effect for other professions
+        if systemMessage is not None:
+            history.pop()
+        history.append(userQuery)
     
     logging.info(f"get response from openai to chat {chatId if chatId else 'NOT_SPECIFIED'}: {resp_text}")
     
