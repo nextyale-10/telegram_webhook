@@ -37,7 +37,7 @@ def set_recurring_greeting_timer(interval:int, # interval for searching db
                                  timedelta: datetime.timedelta):
     
     async def greeting(chat_id:int,user:User,db):
-        await queueMessage(chat_id,GREETING_MSG,bot_id=0,parse_mode=None)
+        # await queueMessage(chat_id,GREETING_MSG,bot_id=0,parse_mode=None)
         update_user_activity_time(user.telegram_id,db)
         ...
     async def process_users():

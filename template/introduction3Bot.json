@@ -1,0 +1,86 @@
+{
+    "steps":[
+        {
+            "step":0,
+            "messages":[
+                {
+                    "id": 0,
+                    "preActions":[],
+                    "content": "Hello! I am {config.bots.bot0.name}. This system is designed to help improve your sleep quality by giving you several advices.",
+                    "postActions": [
+                        {
+                            "type": "continue"
+                        }
+
+                    ],
+                    "sender": 0
+                },
+                {
+                    "id": 1,
+                    "preActions":[],
+                    "content": "Please allow me to introduce my partner.\n {config.bots.bot1.name} is @{config.bots.bot1.username}. She is {config.bots.bot1.description}\n{config.bots.bot2.name} is @{config.bots.bot2.username}. He is {config.bots.bot2.description}\n ",
+                    "postActions":[
+                        {
+                            "type": "continue"
+                        }
+                    ],
+                    "sender":0
+                },
+                {
+                    "id": 2,
+                    "preActions":[],
+                    "content": "Hello, I am {config.bots.bot1.name}. May we have your name?",
+                    "postActions":[
+                        {
+                            "type": "wait"
+                        }
+                    ],
+                    "sender": 1
+
+                }
+            ]
+        },
+        {
+            "step": 1,
+            "messages":[
+                {
+                    "id": 0,
+                    "preActions":[
+                        {
+                            "type": "forward",
+                            "body": {
+                                "prompt": "please extract the name of the user from the following sentence. Return only the name without anything else.\n{lastUserMessage}",
+                                "temperture": 0.0,
+                                "key": "username"
+                            }
+                        }
+                    ],
+                    "content": "Hello {username}! It's a pleasure to have you with us today. My name is {config.bots.bot2.name}. Now Let @{config.bots.bot0.username} to brefly introduce how to use the system.",
+                    "postActions":[
+                        {
+                            "type": "continue"
+                        }
+                    ],
+                    "sender": 2
+                }
+            ] 
+        },
+        {
+            "step": 2,
+            "messages":[
+                {
+                    "id": 0,
+                    "preActions":[],
+                    "content": "In the daytime, you can freely talk to the system.The system will periodically record your chat history as its memory. You can check the memory by type ```\\memory```. Before going to bed, you can type ```\\suggestion``` forsuggentions given by bots. Now please feel free to use the systen.",
+                    "postActions":[
+                        {
+                            "type": "end"
+                        }
+                    ],
+                    "sender": 0
+                }
+            ]
+        }
+    ]
+
+}

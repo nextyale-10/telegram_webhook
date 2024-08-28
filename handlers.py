@@ -48,7 +48,7 @@ async def messageHandler(message: dict,db:Session= Depends(get_db)):
         if userMessageCount!=0 and userMessageCount%2==0:
             try:
                 time =datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                retMem = await get_response(MEMORY_PROMPT.format(history=json.dumps(sessions[chat_id]["freeTalkHistory"]),time=time),chatId=chat_id,useHistory=False)
+                retMem = await get_response(MEMORY_PROMPT.format(history=json.dumps(sessions[chat_id]["freeTalkHistory"]),time=time),chatId=chat_id,useHistory=False,useMemory=False)
                 pattern =r'\[\s*(.*?)\s*\]'
                 match = re.search(pattern, retMem, re.DOTALL)
 
@@ -93,7 +93,7 @@ async def commandHandler(message: dict,db:Session= Depends(get_db)):
     if cmd=="start":
         # start the conversation
         sessions[chat_id]["freeTalk"] = False
-        ppl =Pipline(chat_id)
+        ppl =Pipline(chat_id,config.script_paths.before_bedtime)
         sessions[chat_id]["pipline"]=ppl
         await ppl.run()
         if ppl.end:
@@ -114,6 +114,15 @@ async def commandHandler(message: dict,db:Session= Depends(get_db)):
         for i,m in enumerate(sessions[chat_id]["memory"]):
             retval+=f"{i}: {m}\n"
         await queueMessage(chat_id,retval)
+    elif cmd=="intro":
+        # start an introduction session
+        sessions[chat_id]["freeTalk"] = False
+        ppl =Pipline(chat_id,config.script_paths.introduction)
+        sessions[chat_id]["pipline"]=ppl
+        await ppl.run()
+        if ppl.end:
+            sessions[chat_id]["freeTalk"] = True
+            return
     ...
 def _parseCommand(cmd: str):
     return cmd[1:].split("@")[0]

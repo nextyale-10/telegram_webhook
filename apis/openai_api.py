@@ -12,12 +12,12 @@ load_dotenv(override=True)
 API_KEY = os.getenv("OPENAI_KEY")
 client = AsyncOpenAI(api_key=API_KEY)
 
-async def get_response(query: str,chatId=None,useHistory=False,useMemory=True):
+async def get_response(query: str,chatId=None,useHistory=False,useMemory=True,role="user",temperature=0,systemMessage=""):
     history  = sessions[chatId]["freeTalkHistory"]
-    memoryPrompt = {"role":"system","content": f"Current Time:{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}Please answer user's query based on following memory or information: {sessions[chatId]['memory']}"}
     if useMemory:
+        memoryPrompt = {"role":"system","content": f"Current Time:{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}Please answer user's query based on following memory or information: {sessions[chatId]['memory']}"}
         history.append(memoryPrompt)
-    currentRound = {"role":"user","content":f"{query}"}
+    currentRound = {"role":role,"content":f"{query}"}
     if not useHistory:
         defaultConfig = config.openai.chatgpt.mode.default.starting_msg
         
@@ -29,7 +29,7 @@ async def get_response(query: str,chatId=None,useHistory=False,useMemory=True):
     response = await client.chat.completions.create(
             model="gpt-4o",
             messages=history if useHistory else tempHistory,
-            temperature=0
+            temperature=temperature
         )
     resp_text = response.choices[0].message.content
     

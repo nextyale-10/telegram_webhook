@@ -5,11 +5,11 @@ from apis import openai_api
 from util.messageq import queueMessage
 import asyncio
 class Pipline:
-    def __init__(self,chatId):
+    def __init__(self,chatId,scriptPath):
         
         self.chatId = chatId
         
-        with open(config.script_path) as f:
+        with open(scriptPath) as f:
             
             self.piplineDict = DotDict(json.load(f))
         self.waitingInput = False 
