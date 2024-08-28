@@ -19,6 +19,7 @@ It's a webhook program for telegram bots.
 
 # Features
 - [x] Multi-bots
+- [x] Free talking with the main bot.
 - [x] Control conversation flow by designed script(in json format)
 - [x] Allow commands
 - [x] Recurring messages with timer

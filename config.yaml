@@ -3,9 +3,17 @@
 cur_bot: bot0
 bots: 
   bot0: 
+    username: OkBotBotBotBotBot
     name: bot0
+    description: "a bot can provide user with some useful suggestion about your living environment to improve your sleep."
   bot1: 
+    username: No2hcibot
     name: bot1
+    description: "a bot can provide user with some useful suggestion about your physical state(health, diet, and exercise)"
+  bot2:
+    username: No3HciBot
+    name: bot2
+    description: "a bot can provide user with some useful suggestion about your mental state(mood, stress...)"
 
 host: bot0
 
@@ -25,5 +33,6 @@ openai:
           role: "system"
           content: "You are a helpful assistant."
 
-script_path: ./template/message1Bot.json
-agents-num: 2 # number of agents includeing host
+script_paths:
+  introduction: ./template/introduction3Bot.json
+  before_bedtime: ./template/message1Bot.json

@@ -1,0 +1,3 @@
+# It is a record for telegram bot father setting
+start - start dialogue script
+clear - clear free talk history

@@ -5,19 +5,23 @@
             "messages":[
                 {
                     "id":0,
+                    "preActions":[],
                     "content":"Hello and a very warm welcome to everyone joining us today! I'll be your host for this discussion. My name is {config.bots.bot0.name}",
-                    "action": "continue", 
+                    "postActions":[ {
+                        "type": "continue"
+                    }], 
                     "sender": 0
                 },
                 {
                     "id":1,
+                    "preActions":[],
                     "content":"How may we address you? Please just input your name.",
-                    "action": "forward",
                     "sender": 0,
-                    "forward": {
-                        "prompt": "please extract the name of the user from the following sentence. Return only the name without anything else.\n{input}",
-                        "key": "username"
-                    }
+                    "postActions":[
+                        {
+                            "type":"wait"
+                        }
+                    ]
                 }
             ]
 
@@ -27,20 +31,45 @@
             "messages":[
                 {
                     "id":0,
+                    "preActions":[
+
+                        {
+                            "type": "forward",
+                            "body": {
+                                "prompt": "please extract the name of the user from the following sentence. Return only the name without anything else.\n{lastUserMessage}",
+                                "temperture": 0.0,
+                                "key": "username"
+                            }
+                        }
+                    ],
                     "content":"Hello {username}! It's a pleasure to have you with us today. I hope you're doing well.",
-                    "action": "continue",
+                    "postActions":[
+                        {
+                            "type": "continue"
+                        }
+                    ],
                     "sender": 0
                 },
                 {
                     "id": 1,
+                    "preActions":[],
                     "content": "Our system is still in test stage. So there is no specific goal. However, please allow our chatbot, {config.bots.bot1.name}, to introduce itself.",
-                    "action": "continue",
+                    "postActions":[
+                        {
+                            "type": "continue"
+                        }
+                    ],
                     "sender": 0
                 },
                 {
                     "id": 2,
+                    "preActions":[],
                     "content": "Hello, nice to meet you! My name is {config.bots.bot1.name}. I am a chatbot designed to do persuasive conversation. I am still in test stage, so please bear with me.",
-                    "action": "continue",
+                    "postActions":[
+                        {
+                            "type": "continue"
+                        }
+                    ],
                     "sender": 1
                 }
             ]
@@ -50,24 +79,43 @@
             "messages":[
                 {
                     "id": 0,
+                    "preActions":[],
                     "content": "Let's do some simple task for test purpose. ",
-                    "action": "continue",
+                    "postActions":[
+                        {
+                            "type": "continue"
+                        }
+                    ],
                     "sender": 1
                 },
                 {
                     "id": 1,
+                    "preActions":[],
                     "content": "I will summarize what you say. Please say something and I will summarize it.",
-                    "action": "forward",
-                    "forward":{
-                        "prompt": "Please summarize the following sentence: \n{input}",  
-                        "key": "lastReply"
-                    },
+                    "postActions":[
+                        {
+                            "type": "wait"
+                        }
+                    ],
                     "sender": 1
                 },
                 {
                     "id": 2,
+                    "preActions":[
+                        {
+                            "type": "forward",
+                            "body": {
+                                "prompt": "Please summarize the following sentence: \n{lastUserMessage}",
+                                "key": "lastReply"
+                            }
+                        }
+                    ],
                     "content": "What you just said can be summarized as following: {lastReply}",
-                    "action":"continue",
+                    "postActions":[
+                        {
+                            "type": "continue"
+                        }
+                    ],
                     "sender": 1
                 }
             ]
@@ -77,8 +125,13 @@
             "messages":[
                 {
                     "id":0,
+                    "preActions":[],
                     "content": "Thanks for your participation. Let's end the conversation. Now you can free chat with host as a normal chatbot.",
-                    "action": "end",
+                    "postActions":[
+                        {
+                            "type": "end"
+                        }
+                    ],
                     "sender": 0
                 }
             ]

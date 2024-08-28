@@ -2,18 +2,17 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import threading
-import time
 import asyncio
 from crud.user_crud import *
 
 from do.model import User
 import datetime
-from apis import telegram_api
+from util.messageq import queueMessage
 from dotenv import load_dotenv
 from util.customized_ds import DotDict
 import os
 
-load_dotenv()
+load_dotenv(override=True)
 
 SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -38,7 +37,7 @@ def set_recurring_greeting_timer(interval:int, # interval for searching db
                                  timedelta: datetime.timedelta):
     
     async def greeting(chat_id:int,user:User,db):
-        await telegram_api.sendMessage(chat_id,GREETING_MSG,bot_id=0,parse_mode=None)
+        # await queueMessage(chat_id,GREETING_MSG,bot_id=0,parse_mode=None)
         update_user_activity_time(user.telegram_id,db)
         ...
     async def process_users():
@@ -57,7 +56,7 @@ def set_recurring_greeting_timer(interval:int, # interval for searching db
 
         threading.Timer(interval, run,(timedelta,)).start()
         
-        
+    #? consider change threading to async task or at least another process for efficiency or multi-core ultilization
     threading.Timer(interval, run,(timedelta,)).start()
 
     ...
