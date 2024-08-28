@@ -19,7 +19,7 @@ async def get_response(query: str,chatId=None,useHistory=False,role="user",tempe
     currentRound = {"role":role,"content":f"{query}"}
     if not useHistory:        
         tempHistory =[systemMessage,
-                    currentRound]
+                    currentRound] if systemMessage is not None else [currentRound]
     else:
         history.append(currentRound)
 
