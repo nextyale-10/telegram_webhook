@@ -28,10 +28,10 @@ class Pipline:
         
         steps = self.piplineDict.steps
         try:
-            for i in range(self.stepId,len(steps)):
-                step = steps[i]
+            while self.stepId<len(steps):
+                step = steps[self.stepId]
                 messages = step.messages
-                for j in range(self.messageId,len(messages)):
+                while self.messageId<len(messages):
                     
                     # if the pipline has been waiting for user input
                     # then restart the pipline 
@@ -39,18 +39,21 @@ class Pipline:
                         self.waitingInput = False
                         
                     # execute actions need to be done before sending the message
-                    await self.executePreActions(messages[j].preActions)
-                    
+                    status = await self.executePreActions(messages[self.messageId].preActions)
+                    if status==1:
+                        # wait another input
+                        self.waitingInput = True
+                        return
                     # send the message
-                    await queueMessage(self.chatId,step.messages[j].content.format(**self.piplineKV,**DotDict({"config":config})),bot_id=messages[j].sender)
+                    await queueMessage(self.chatId,step.messages[self.messageId].content.format(**self.piplineKV,**DotDict({"config":config})),bot_id=messages[self.messageId].sender)
                     
                     # execute actions need to be done after sending the message
-                    await self.executePostActions(messages[j].postActions)
-                    self.messageId = j+1
+                    await self.executePostActions(messages[self.messageId].postActions)
+                    self.messageId += 1
                     if self.waitingInput:
                         return    
                 else:
-                    self.stepId = i+1
+                    self.stepId += 1
                     self.messageId = 0
         except Exception as e:
             logging.error(f"error in pipline run: {e}")
@@ -63,6 +66,20 @@ class Pipline:
                 resp = await openai_api.get_response(prompt.format(**self.piplineKV),chatId = self.chatId,useHistory=False)
                 if action.body.get("key",None):
                     self.piplineKV[action.body.key] = resp
+                if "check" in action:
+                    checkResp = await openai_api.get_response(action.check.prompt.format(**self.piplineKV),chatId = self.chatId,useHistory=False,temperature=0)
+                    if checkResp=="1":
+                        # check passed
+                        return 0
+                        
+                    else:
+                        # check failed
+                        exceptionActionType = action.check.exceptionAction.type 
+                        if exceptionActionType=="repeat":
+                            await queueMessage(self.chatId,action.check.exceptionAction.body.content.format(**self.piplineKV))
+                            return 1
+        return 0
+                        
         pass
     async def executePostActions(self,postActions):
         for action in postActions:

@@ -62,7 +62,7 @@ def set_recurring_greeting_timer(interval:int, # interval for searching db
     ...
 def setup():
     logging_config()
-    set_recurring_greeting_timer(interval=5,timedelta=datetime.timedelta(seconds=60*60))
+    # set_recurring_greeting_timer(interval=5,timedelta=datetime.timedelta(seconds=60*60))
     
 def read_config():
     import yaml
