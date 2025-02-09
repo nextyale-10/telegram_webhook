@@ -52,7 +52,17 @@
                                 "prompt": "please extract the name of the user from the following sentence. Return only the name without anything else.\n{lastUserMessage}",
                                 "temperture": 0.0,
                                 "key": "username"
-                            }
+                            },
+                            "check":{
+                                "prompt": "Do you think the following content is a name?\n{username}\nReturn 1 for yes 0 for no.",
+                                "exceptionAction":{
+                                    "type": "repeat",
+                                    "body":{
+                                        "content":"I am so sorry, but I cannot get your name from your last message. Can you input it again?"
+                                    }
+                                }
+
+                                }
                         }
                     ],
                     "content": "Hello {username}! It's a pleasure to have you with us today. My name is {config.bots.bot2.name}. Now Let @{config.bots.bot0.username} to brefly introduce how to use the system.",
